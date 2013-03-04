@@ -1,0 +1,21 @@
+Expense Tracker Mobile HTML5
+
+This is a sample mobile application built with HTML5. Not intended to run as
+production level code. Please do not hold your breath waiting to be impressed
+with this code. This is supposed to be a very basic DB CRUD app, nothing fancy
+or impressive. Expense Tracker Mobile HTML5 includes a copy of jQuery Mobile.
+
+Don't want to download the code to try this out? No problem. This repo is also
+available here on GitHub at the following URL. It will work in your desktop
+browser, but it's really intended to run on your phone.
+
+Expense Tracker Mobile HTML5 URL
+http://matthewriley.github.com/Expense-Tracker-Mobile-HTML5/
+
+Expense Tracker Mobile HTML5 is licensed under the Apache Public License (Version 2).
+
+
+Notices from jQuery:
+
+Copyright 2010, jQuery Project
+Dual licensed under the MIT or GPL Version 2 licenses.

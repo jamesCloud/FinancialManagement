@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<title>Financial Management</title>
+	<link rel="stylesheet" href="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.css" />
+	<link rel="stylesheet" href="jquery-custom-styles.css" />
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery-1.6.1.min.js"></script>
+    <script type="text/javascript" src="jquery-custom-scripting.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+    
+    <script type="text/javascript" charset="utf-8" src="cordova-2.4.0.js"></script>
+    
+   
+    
+    
+</head>
+<body>
+
+<div data-role="page">
+
+	<div id="headerDiv" data-role="header" data-theme="b" data-position="inline">
+		<h1>Financial Management</h1>
+	</div>
+
+	<div data-role="content" data-theme="c" id="contentMain" name="contentMain">
+
+	<form id="budgetForm" method="post">
+
+		<div data-role="fieldcontain">
+        	<label for="budgetAmount">Input Budget Amount:</label>
+			<input type="number" name="budgetAmount" id="budgetAmount" value="500"/>
+            <label for="budgetDate">Date:</label>
+            <input type="date" name="budgetDate" id="budgetDate" value="" />
+		</div>
+
+		<p>
+			<a href="" id="submitBudget" data-role="button">Save Budget</a>
+		</p>
+
+	</form>
+
+	</div>
+	
+	<!-- contentDialog -->
+	<div align="CENTER" data-role="content" id="contentDialog" name="contentDialog">
+		<p><span id="contentMessage" name="contentMessage"></span></p>
+		<a id="contentOK" name="contentOK" href="" data-role="button" data-inline="true">OK</a>
+		<a id="confirmationOK" name="confirmationOK" href="index.html" rel="external" data-role="button" data-inline="true">OK</a>
+	</div>
+	
+	<script type="application/javascript">
+		$(document).ready(function(){
+			// Assign global variables
+			contentMainVar = $('#contentMain');
+			//expenseTypeVar = $('#expenseType');
+			//expenseAmountVar = $('#expenseAmount');
+			//expenseDateVar = $('#expenseDate');
+			
+			 budgetAmount = $('#budgetAmount');
+			 budgetDate = $('#budgetDate');
+			
+			contentDialogVar = $('#contentDialog');
+			contentMessageVar = $('#contentMessage');
+			contentOKVar = $('#contentOK');
+			confirmationOKVar = $('#confirmationOK');
+			hideContentDialog();
+			document.getElementById('budgetDate').value = date_string;
+		});
+	
+		$('#contentOK').click(function(){
+			hideContentDialog();
+			showMain();
+			return false;
+		});
+	
+		$('#contentOK').tap(function(){
+			hideContentDialog();
+			showMain();
+			return false;
+		});
+	
+		$('#submitBudget').click(function(){
+			$('#budgetForm').submit();
+			return false;
+		});
+	
+		$('#submitBudget').tap(function(){
+			$('#budgetForm').submit();
+			return false;
+		});
+	
+		$('#budgetForm').submit(function(){
+			var err = false;
+			var errMessage = null;
+	
+			// Hide the Main content
+			hideMain();
+	
+			// Show content dialog
+			showContentDialog();
+	
+			// Verify form is not empty
+			// Not intended to be comprehensive validation
+			// Keeping it simple for demo
+			if(
+				budgetAmount == EMPTY || budgetDate == EMPTY
+				||
+				budgetAmount == null || budgetDate == null
+			){
+				err = true;
+				errMessage = 'Please fill out the form.';
+			}
+	
+			// If validation fails, show Dialog content
+			if (err == true) {
+				contentDialogAsError(errMessage);
+				return false;
+			}
+	
+			// If validation passes, show Transition content
+			contentDialogAsTransition('Processing your request. Please wait.');
+	
+			// Save form to local Web SQL Database; Database initilized in jquery-custom-scripting.js
+			// Proper implementation would use feature detection with Modernizr or send data to server via ajax
+			// Keeping it simple for demo
+			db.transaction(function(tx) {
+				tx.executeSql('INSERT INTO budget (budgetAmount, budgetDate) values (?, ?)', [budgetAmount.val(), budgetDate.val()],function(tx, results) {
+					contentDialogAsConfirmation('Budget has been added.');
+				},function(err) {
+					contentDialogAsError('Error processing SQL: ' + err.code);
+				});
+			});
+	
+			return false;
+		});
+	
+		function hideMain(){
+			contentMainVar.hide();
+		}
+		function showMain(){
+			contentMainVar.show();
+		}
+		function hideContentDialog(){
+			contentDialogVar.hide();
+		}
+		function showContentDialog(){
+			contentDialogVar.show();
+		}
+	
+		function contentDialogAsTransition(message){
+			contentMessageVar.text(message);
+			contentOKVar.hide();
+			confirmationOKVar.hide();
+		}
+		function contentDialogAsError(message){
+			contentMessageVar.text(message);
+			contentOKVar.show();
+			confirmationOKVar.hide();
+		}
+		function contentDialogAsConfirmation(message){
+			contentMessageVar.text(message);
+			contentOKVar.hide();
+			confirmationOKVar.show();
+		}
+	</script>
+
+	<div id="footerDiv" data-role="footer" data-theme="b" data-id="footer" data-position="fixed">
+		<div data-role="navbar" data-type="horizontal" align="center">
+			<!--<ul>
+            <li><a href="budget_entries.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget List</a></li>
+            	<li><a href="budget.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget</a></li>
+				<li><a href="index.html" data-icon="check" data-iconpos="top" data-ajax="false">Expense</a></li>
+				<li><a href="entries.html" data-icon="grid" data-iconpos="top" data-ajax="false">Entries</a></li>
+			</ul>-->
+		</div>
+	</div>
+
+</div>
+
+</body>
+</html>

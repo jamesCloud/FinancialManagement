@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<title>Financial Management</title>
+	<link rel="stylesheet" href="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.css" />
+	<link rel="stylesheet" href="jquery-custom-styles.css" />
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery-1.6.1.min.js"></script>
+	<script type="text/javascript" src="jquery-custom-scripting.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+</head>
+<body>
+
+<div data-role="page">
+
+	<div id="headerDiv" data-role="header" data-theme="b" data-position="inline">
+		<h1>Financial Management</h1>
+	</div>
+
+	<div data-role="content" data-theme="c" id="contentMain" name="contentMain">
+
+	<form id="expenseForm" method="post">
+		
+        <div data-role="fieldcontain">
+		<label for="menu">Current Budget</label>
+		<select id="menu" disabled="true"></select>
+        <input type="hidden" name="hdnmenuValue" id="hdnmenuValue" value=""/>
+		</div>
+        
+		<div data-role="fieldcontain">
+			<label for="expenseType">Type:</label>
+			<select name="expenseType" id="expenseType">
+				<option value="Food">Food</option>
+				<option value="Gas">Gas</option>
+				<option value="Misc">Misc</option>
+                <option value="Bill">Bill</option>
+                <option value="Rent">Rent</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Tuition Fee">Tuition Fee</option>
+			</select>
+		</div>
+
+		<div data-role="fieldcontain">
+			<label for="expenseAmount">Amount:</label>
+			<input type="number" name="expenseAmount" id="expenseAmount" value="1.25" />
+		</div>
+
+		<div data-role="fieldcontain">
+			<label for="expenseDate">Date:</label>
+			<input type="date" name="expenseDate" id="expenseDate" value="" />
+		</div>
+
+		<p>
+			<a href="" id="submitExpense" data-role="button" onClick="validate();">Save Expense</a>
+		</p>
+
+	</form>
+
+	</div>
+	
+	<!-- contentDialog -->
+	<div align="CENTER" data-role="content" id="contentDialog" name="contentDialog">
+		<p><span id="contentMessage" name="contentMessage"></span></p>
+		<a id="contentOK" name="contentOK" href="" data-role="button" data-inline="true">OK</a>
+		<a id="confirmationOK" name="confirmationOK" href="index.html" rel="external" data-role="button" data-inline="true">OK</a>
+	</div>
+	
+	<script type="application/javascript">
+		$(document).ready(function(){
+			// Assign global variables
+			menuValue = $('#menu');
+			hdnmenuValue = $('#hdnmenuValue');
+			contentMainVar = $('#contentMain');
+			expenseTypeVar = $('#expenseType');
+			expenseAmountVar = $('#expenseAmount');
+			expenseDateVar = $('#expenseDate');
+			contentDialogVar = $('#contentDialog');
+			contentMessageVar = $('#contentMessage');
+			contentOKVar = $('#contentOK');
+			confirmationOKVar = $('#confirmationOK');
+			hideContentDialog();
+			document.getElementById('expenseDate').value = date_string;
+			
+			
+			db.transaction(function(tx){
+				tx.executeSql('SELECT * FROM budget ORDER BY budgetDate DESC LIMIT 1', [], function(tx, results){
+						for( i = 0; i < results.rows.length; i++) {
+						
+							  var options = '<option value="'+results.rows.item(i).id+'">'+results.rows.item(i).budgetAmount+'</option>';
+							  $('#menu').append(options).attr('selected', true).removeAttr('selected');
+							  $("#menu").trigger("change");
+							  
+							  $('#hdnmenuValue').val(results.rows.item(i).budgetAmount);
+
+						}
+					});	
+			});
+			
+			
+			
+			
+		});
+	
+		$('#contentOK').click(function(){
+			hideContentDialog();
+			showMain();
+			return false;
+		});
+	
+		$('#contentOK').tap(function(){
+			hideContentDialog();
+			showMain();
+			return false;
+		});
+	
+		$('#submitExpense').click(function(){
+
+		/*	$('#expenseForm').submit();
+			return false;*/
+			
+			//alert(expenseAmountVar.val());
+			
+			if(expenseAmountVar.val() > hdnmenuValue.val())
+			{
+				alert('You cannot have much greater amount than your budget');
+			}else
+			{
+				$('#expenseForm').submit();	
+			}
+			return false;
+			
+		});
+	
+		$('#submitExpense').tap(function(){
+			
+			if(expenseAmountVar.val() > hdnmenuValue.val())
+			{
+				alert('You cannot have much greater amount than your budget');	
+			}else
+			{
+				$('#expenseForm').submit();
+			}
+		
+			return false;
+		});
+	
+		$('#expenseForm').submit(function(){
+			var err = false;
+			var errMessage = null;
+	
+			// Hide the Main content
+			hideMain();
+	
+			// Show content dialog
+			showContentDialog();
+	
+			// Verify form is not empty
+			// Not intended to be comprehensive validation
+			// Keeping it simple for demo
+			
+			
+			
+		   if(
+				expenseTypeVar.val() == EMPTY || expenseAmountVar.val() == EMPTY || expenseDateVar.val() == EMPTY 
+				||
+				expenseTypeVar.val() == null || expenseAmountVar.val() == null || expenseDateVar.val() == null
+			){
+				
+				
+				
+				err = true;
+				errMessage = 'Please fill out the form.';
+				
+				
+				
+				
+			}
+			
+			
+	
+			if (err == true) {
+				contentDialogAsError(errMessage);
+				return false;
+			}else
+			{
+			
+			// If validation fails, show Dialog content
+			
+			
+	
+			// If validation passes, show Transition content
+			contentDialogAsTransition('Processing your request. Please wait.');
+	
+			// Save form to local Web SQL Database; Database initilized in jquery-custom-scripting.js
+			// Proper implementation would use feature detection with Modernizr or send data to server via ajax
+			// Keeping it simple for demo
+			db.transaction(function(tx) {
+				tx.executeSql('INSERT INTO expenses (budgetID, expenseType, expenseAmount, expenseDate) values (?, ?, ?, ?)', [menuValue.val(),expenseTypeVar.val(), expenseAmountVar.val(), expenseDateVar.val()],
+				function(tx, results) {
+					// Display confirmation message
+					contentDialogAsConfirmation('Expense has been added.');
+				},function(err) {
+					// Display error message
+					contentDialogAsError('Error processing SQL: ' + err.code);
+				});
+				
+				tx.executeSql('INSERT INTO expenseTransfer (budgetID, expenseType, expenseAmount, expenseDate) values (?, ?, ?, ?)', [menuValue.val(),expenseTypeVar.val(), expenseAmountVar.val(), expenseDateVar.val()],
+				function(tx, results) {
+					// Display confirmation message
+					contentDialogAsConfirmation('Expense has been added.');
+				},function(err) {
+					// Display error message
+					contentDialogAsError('Error processing SQL: ' + err.code);
+				});
+
+				
+			});
+			
+			
+			}
+			
+			
+			return false;
+		});
+	
+	
+			
+	
+	
+		function hideMain(){
+			contentMainVar.hide();
+		}
+		function showMain(){
+			contentMainVar.show();
+		}
+		function hideContentDialog(){
+			contentDialogVar.hide();
+		}
+		function showContentDialog(){
+			contentDialogVar.show();
+		}
+	
+		function contentDialogAsTransition(message){
+			contentMessageVar.text(message);
+			contentOKVar.hide();
+			confirmationOKVar.hide();
+		}
+		function contentDialogAsError(message){
+			contentMessageVar.text(message);
+			contentOKVar.show();
+			confirmationOKVar.hide();
+		}
+		function contentDialogAsConfirmation(message){
+			contentMessageVar.text(message);
+			contentOKVar.hide();
+			confirmationOKVar.show();
+		}
+		
+		
+		function validate()
+		{
+			if(expenseAmount > menuValue){err = true; errMessage='Your Amount is greater than your budget!'; }	
+		}
+		
+	</script>
+
+	<div id="footerDiv" data-role="footer" data-theme="b" data-id="footer" data-position="fixed">
+		<div data-role="navbar" data-type="horizontal" align="center">
+			<ul>
+          <!--  <li><a href="budget_entries.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget List</a></li>
+          -->
+            	<li><a href="budget.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget</a></li>
+                <!--
+				<li><a href="index.html" data-icon="check" data-iconpos="top" data-ajax="false">Expense</a></li>-->
+				<li><a href="entries.html" data-icon="grid" data-iconpos="top" data-ajax="false">Entries</a></li>
+			</ul>
+		</div>
+	</div>
+
+</div>
+
+</body>
+</html>

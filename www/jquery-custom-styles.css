@@ -1,0 +1,7 @@
+.ui-li .ui-btn-inner a.ui-link-inherit, .ui-li-static.ui-li {
+	padding: 0.7em 15px 0.7em 15px !important;
+}
+
+.ui-header .ui-title, .ui-footer .ui-title {
+	overflow: visible !important;
+}

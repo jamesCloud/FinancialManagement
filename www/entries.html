@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<title>Financial Management</title>
+	<link rel="stylesheet" href="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.css" />
+	<link rel="stylesheet" href="jquery-custom-styles.css" />
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery-1.6.1.min.js"></script>
+	<script type="text/javascript" src="jquery-custom-scripting.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+    
+    <style type="text/css">
+		#totalExpense, #Remaining{
+			margin:10px;
+			color:red;	
+	    }
+		#totalExpense span, #Remaining span{
+			font-weight:bold;	
+			color:black;
+		}
+		label {
+			margin-left:10px;	
+		}
+		p{
+			padding:10px;
+			background:#CCC;
+			text-align:justify;	
+			text-indent:25px;
+		}
+	</style>
+    
+</head>
+<body>
+
+<div data-role="page">
+
+	<div id="headerDiv" data-role="header" data-theme="b" data-position="inline">
+		<h1>Financial Management</h1>
+	</div>
+
+
+<form method="post" id="computeFrm"> 
+	<div>
+    <p>To Compute for Total You need to select budget from the dropdown button. And press compute</p>
+    </div>
+    <div id="totalExpense"><span><input type="hidden" name="total" id="total" disabled="true"/>Total Expenses:&nbsp; &nbsp;</span></div>
+    <div id="Remaining"><span>Remaining:</span><input type="hidden" name="remain" id="remain" disabled="true"/></div>
+    <div id=""><input type="hidden" name="budgetid" id="budgetid" /></div>
+    <div>
+    	
+    </div>
+    <div data-role="fieldcontain" style="margin:10px;">
+    	<label for="menu">Select Budget</label>
+        <input type="hidden" name="hiddenSelectBudget" id="hiddenSelectBudget" value=""/>
+		<select id="menu" disabled="true"></select>
+        
+		<script type="application/javascript">
+		$(document).ready(function(){
+			
+			var elm = document.getElementById('entriesUL'), li;
+			console.dir(db);
+			
+			db.transaction(function(tx) {
+				tx.executeSql('SELECT * FROM budget ORDER BY budgetDate DESC', [], function(tx, results) {
+					for( i = 0; i < results.rows.length; i++) {
+						
+						var options = '<option value="'+results.rows.item(i).budgetAmount+'">'+results.rows.item(i).budgetAmount+'</option>';
+						$('#menu').append(options).attr('selected', true).removeAttr('selected');
+						$("#menu").trigger("change");
+						var budgetid = results.rows.item(i).id;
+						$('#budgetid').val(budgetid);
+						
+						$('#hiddenSelectBudget').val(results.rows.item(i).budgetAmount);
+
+					}
+				});
+			});
+			
+
+		});
+	
+	</script>
+		
+   </div>
+   
+   
+   <div style="margin:10px;">
+   <input type="submit" name="computeAmount" id="computeAmount" value="Compute"/>
+   <input type="submit" name="saveBudgetAndExpensesAsOwn" value="Save" id="saveBudgetAndExpensesAsOwn" disabled="true">
+   </div>
+   
+ 
+ 
+ 
+   
+   </form>     
+
+
+	<div data-role="content" data-theme="c" id="contentMain" name="contentMain" style="margin:10px;">
+		<h3>Expense Entries</h3>
+		<ul id="entriesUL"></ul><br>
+		<a href="" id="resetDB" data-role="button" data-ajax="false">Reset Database</a>
+	</div>
+    
+    
+        
+	`
+	<script type="application/javascript">
+		$(document).ready(function(){
+		
+			
+			var elm = document.getElementById('entriesUL'), li;
+			console.dir(db);
+
+			db.transaction(function(tx) {
+				tx.executeSql('SELECT * FROM expenses ORDER BY expenseDate DESC', [], function(tx, results) {
+					for( i = 0; i < results.rows.length; i++) {
+						li = document.createElement('li');
+						li.innerHTML = '<b>ID:</b> ' + results.rows.item(i).budgetID +'<br/><b>Type:</b> ' + results.rows.item(i).expenseType + '<br><b>Amount:</b> ' + formatCurrency(results.rows.item(i).expenseAmount) + '<br><b>Date:</b> ' + results.rows.item(i).expenseDate + '<br><br>';
+						
+						var amount = results.rows.item(i).expenseAmount;
+						
+						var expenseType = results.rows.item(i).expenseType;
+						var expenseAmount = formatCurrency(results.rows.item(i).expenseAmount);
+						var expenseDate = results.rows.item(i).expenseDate;
+						
+						
+						
+						if(elm.firstChild) {
+							elm.insertBefore(li, elm.firstChild);
+							
+						} else {
+							elm.appendChild(li);
+						}	
+						
+					}
+					
+					
+					
+					
+				});
+				
+				
+				tx.executeSql('select sum(expenseAmount) as expensesAmount from expenses', [], function(tx, results) {
+					for( i = 0; i < results.rows.length; i++) {
+						var amount = formatCurrency(results.rows.item(i).expensesAmount);
+					}
+					
+					
+					$('#totalExpense').append('P' +amount);
+					
+					$('#total').val(amount);
+					
+					
+					$('#computeAmount').click(function(){
+							
+					var menuValue = $('#menu').val();
+					var compute = menuValue - amount;
+					$('#remain').val(compute);
+
+					
+					
+							$('#Remaining').append('You still have '+ compute);
+							
+							$('#computeAmount').button('disable'); 
+							$('#saveBudgetAndExpensesAsOwn').button('enable'); 
+							
+					
+							
+							
+							
+			
+				});
+				/**************************************************************************/
+
+					
+				});
+				
+			});
+			
+			$('#saveBudgetAndExpensesAsOwn').click(function(e){
+					
+					 e.stopImmediatePropagation();
+					 e.preventDefault();
+					
+					
+					
+					
+					$('#computeFrm').submit();
+					alert(expenseAmount);
+					return false;
+					
+			});
+			
+			
+			
+$('#computeFrm').submit(function(e){
+ e.preventDefault();
+ 
+	  db.transaction(function(tx) {
+		 
+		  menuValue = $('#menu');
+		   total = $('#total');
+		   remain = $('#remain');
+		   var d = date_string;
+		  tx.executeSql('INSERT INTO listing (selectedBudget, totalExpenses, remaining, entryDate) values (?, ?, ?, ?)', [menuValue.val(), total.val(), remain.val(), d],function(tx, results){
+				  alert('Data has been saved!');
+				 	db.transaction(function(tx) {
+					tx.executeSql('DELETE FROM expenses', [], function() {
+							alert('table expenses is now empty');
+							document.location = 'listing.html';
+						}, function(err){alert('SQL: '+err.message)});
+				});
+				  //document.location = 'listing.html';
+				/* db.transaction(function(tx) { 
+				 var hold = $('#budgetid').val();
+					 tx.executeSql('DELETE FROM budget WHERE id=?', [hold], function() {
+							alert('table budget is now empty'+hold);
+						});
+			
+				 });*/
+				 
+		  },function(err){
+				  alert('failed to saved '+ err + err.message + err.code);	
+		  });
+		  
+		 
+	  });
+	 
+	 
+	 
+	  return false;
+});
+				
+});
+	
+
+function emptyBudgetTable(id)
+{
+	db.transaction(function(tx) {
+		 tx.executeSql('DELETE * FROM budget WHERE id=?', [hold], function() {
+				alert('table budget is now empty');
+			});
+
+	});
+}
+
+
+
+		
+		
+	
+		$('#resetDB').click(function(){
+			resetDB();
+			return false;
+		});
+	
+		$('#resetDB').tap(function(){
+			resetDB();
+			return false;
+		});
+	</script>
+
+	<div id="footerDiv" data-role="footer" data-theme="b" data-id="footer" data-position="fixed">
+		<div data-role="navbar" data-type="horizontal" align="center">
+			<ul>
+            	<li><a href="listing.html" data-icon="info" data-iconpos="top" data-ajax="false">Listing</a></li>
+               <!-- <li><a href="budget_entries.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget List</a></li>
+            	<li><a href="budget.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget</a></li>
+				<li><a href="index.html" data-icon="check" data-iconpos="top" data-ajax="false">Expense</a></li>
+				<li><a href="entries.html" data-icon="grid" data-iconpos="top" data-ajax="false">Entries</a></li>
+                <li><a href="entries_replica.html" data-icon="info" data-iconpos="top" data-ajax="false">Replica</a></li>-->
+			</ul>
+		</div>
+	</div>
+
+</div>
+
+</body>
+</html>

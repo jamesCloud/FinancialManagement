@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<title>Financial Management</title>
+	<link rel="stylesheet" href="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.css" />
+	<link rel="stylesheet" href="jquery-custom-styles.css" />
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery-1.6.1.min.js"></script>
+	<script type="text/javascript" src="jquery-custom-scripting.js"></script>
+	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.js"></script>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
+	<meta name="apple-mobile-web-app-capable" content="yes"/>
+    
+    <style type="text/css">
+		#totalExpense, #Remaining{
+			margin:10px;
+			color:red;	
+	    }
+		#totalExpense span, #Remaining span{
+			font-weight:bold;	
+			color:black;
+		}
+		label {
+			margin-left:10px;	
+		}
+		p{
+			padding:10px;
+			background:#CCC;
+			text-align:justify;	
+			text-indent:25px;
+		}
+	</style>
+    
+</head>
+<body>
+
+<div data-role="page">
+
+	<div id="headerDiv" data-role="header" data-theme="b" data-position="inline">
+		<h1>Financial Management</h1>
+	</div>
+
+	<div data-role="content" data-theme="c" id="contentMain" name="contentMain" style="margin:10px;">
+		<h3>Expense Entries</h3>
+		<ul id="entriesUL"></ul><br>
+		<a href="" id="resetDB" data-role="button" data-ajax="false">Reset Database</a>
+	</div>
+    
+    
+        
+	`
+	<script type="application/javascript">
+		$(document).ready(function(){
+			
+			
+			var elm = document.getElementById('entriesUL'), li;
+			console.dir(db);
+
+			db.transaction(function(tx) {
+				tx.executeSql('SELECT * FROM expenseTransfer ORDER BY expenseDate DESC', [], function(tx, results) {
+					for( i = 0; i < results.rows.length; i++) {
+						li = document.createElement('li');
+						li.innerHTML = '<b>ID:</b> ' + results.rows.item(i).budgetID +'<br><b>Type:</b> ' + results.rows.item(i).expenseType + '<br><b>Amount:</b> ' + formatCurrency(results.rows.item(i).expenseAmount) + '<br><b>Date:</b> ' + results.rows.item(i).expenseDate + '<br><br>';
+						
+						var amount = results.rows.item(i).expenseAmount;
+						
+						var expenseType = results.rows.item(i).expenseType;
+						var expenseAmount = formatCurrency(results.rows.item(i).expenseAmount);
+						var expenseDate = results.rows.item(i).expenseDate;
+						
+						
+						
+						if(elm.firstChild) {
+							elm.insertBefore(li, elm.firstChild);
+							
+						} else {
+							elm.appendChild(li);
+						}	
+						
+					}
+					
+					
+					
+					
+				});
+				
+			});
+			
+		
+
+		});
+		
+
+		$('#resetDB').click(function(){
+			resetExpenseTransfer();
+			return false;
+		});
+	
+		$('#resetDB').tap(function(){
+			resetExpenseTransfer();
+			return false;
+		});
+		
+	
+		function resetExpenseTransfer()
+		{
+			db.transaction(function(tx){
+				tx.executeSql('DROP TABLE IF EXISTS expenseTransfer', [], function() {
+						document.location = 'index.html';
+					},function(err){
+						alert('Error Encounter '+err.message)	;
+						});
+			});	
+		}
+
+	</script>
+
+	<div id="footerDiv" data-role="footer" data-theme="b" data-id="footer" data-position="fixed">
+		<div data-role="navbar" data-type="horizontal" align="center">
+			<ul>
+            	<li><a href="listing.html" data-icon="info" data-iconpos="top" data-ajax="false">Listing</a></li>
+                <li><a href="budget_entries.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget List</a></li>
+            	<li><a href="budget.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget</a></li>
+				<li><a href="index.html" data-icon="check" data-iconpos="top" data-ajax="false">Expense</a></li>
+				<li><a href="entries.html" data-icon="grid" data-iconpos="top" data-ajax="false">Entries</a></li>
+			</ul>
+		</div>
+	</div>
+
+</div>
+
+</body>
+</html>
