@@ -136,6 +136,7 @@
 			else
 			{
 				$('#expenseForm').submit();	
+				document.location = 'listing.html';
 			}
 			return false;
 		});
@@ -149,6 +150,7 @@
 			else
 			{
 				$('#expenseForm').submit();	
+				document.location = 'listing.html';
 			}
 			return false;
 		});
@@ -214,6 +216,7 @@
 				function(tx, results) {
 					// Display confirmation message
 					contentDialogAsConfirmation('Expense has been added.');
+					
 				},function(err) {
 					// Display error message
 					contentDialogAsError('Error processing SQL: ' + err.code);

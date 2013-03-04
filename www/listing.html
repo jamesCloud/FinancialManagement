@@ -3,13 +3,6 @@
 	<head>
 	<meta charset="utf-8">
 	<title>Financial Management</title>
-    <link href="jquery.mobile-1.0.b1/jquery.mobile.theme-1.0.min.css" rel="stylesheet" type="text/css"/>
-<link href="jquery.mobile-1.0.b1/jquery.mobile.structure-1.0.min.css" rel="stylesheet" type="text/css"/>
-<script src="jquery.mobile-1.0.b1/jquery-1.6.4.min.js" type="text/javascript"></script>
-<script src="jquery.mobile-1.0.b1/jquery.mobile-1.0.min.js" type="text/javascript"></script>
-    
-    
-    
 	<link rel="stylesheet" href="jquery.mobile-1.0b1/jquery.mobile-1.0b1.min.css" />
 	<link rel="stylesheet" href="jquery-custom-styles.css" />
 	<script type="text/javascript" src="jquery.mobile-1.0b1/jquery-1.6.1.min.js"></script>
@@ -21,244 +14,289 @@
 </head>
 <body>
 
-<div data-role="page" id="first">
+<div data-role="page" data-add-back-btn="true">
 
-	<div id="headerDiv" data-role="header" data-theme="b" data-position="inline">
+	<div id="headerDiv" data-role="header" data-theme="b" data-position="inline" >
 		<h1>Financial Management</h1>
 	</div>
 
 	<div data-role="content" data-theme="c" id="contentMain" name="contentMain">
-		<h3>Computed Entries</h3>
-        <div style="margin:10px;">
-        	<p style="text-align:center; color:red;">
-            	Note: An alert will show if 20% of your budget or lower is occuring.
-            	<span style="background:#CCC">Example: Budget is: 500 * .20 = (100)</span>    
-            </p>
-        </div>
-		<ul id="entriesUL">
-        	
-         
-        </ul><br>
-       <p> <a href="budget.html" id="gotoBudget" data-ajax="false"></a></p>
-		<p><a href="" id="resetDB" data-role="button">Reset Database</a>
-        </p>
+
+	<form id="expenseForm" method="post" onSubmit="validate();">
+		
+        <div data-role="fieldcontain">
+		<label for="menu">Remaining Budget</label>
+		<select id="menu" disabled="true"></select>
+        <input type="hidden" name="menuHidden" id="menuHidden" value=""/>
+        <input type="hidden" name="totalExpensesHidden" id="totalExpensesHidden" value="" disabled="true"/>
+		</div>
+        
+		<div data-role="fieldcontain">
+			<label for="expenseType">Type:</label>
+			<select name="expenseType" id="expenseType">
+				<option value="Food">Food</option>
+				<option value="Gas">Gas</option>
+				<option value="Misc">Misc</option>
+                <option value="Bill">Bill</option>
+                <option value="Rent">Rent</option>
+                <option value="Transportaion">Transportation</option>
+                <option value="Tuition Fee">Tuition Fee</option>
+			</select>
+
+		</div>
+
+		<div data-role="fieldcontain">
+			<label for="expenseAmount">Amount:</label>
+			<input type="number" name="expenseAmount" id="expenseAmount" value="1.25" />
+		</div>
+
+		<div data-role="fieldcontain">
+			<label for="expenseDate">Date:</label>
+			<input type="date" name="expenseDate" id="expenseDate" value="" />
+		</div>
+
+		<p>
+			<a href="" id="submitExpense" data-role="button" onClick="return validate();">Save Expense</a>
+		</p>
+
+	</form>
+
 	</div>
 	
-   
-    
+	<!-- contentDialog -->
+	<div align="CENTER" data-role="content" id="contentDialog" name="contentDialog">
+		<p><span id="contentMessage" name="contentMessage"></span></p>
+		<a id="contentOK" name="contentOK" href="" data-role="button" data-inline="true">OK</a>
+		<a id="confirmationOK" name="confirmationOK" href="index.html" rel="external" data-role="button" data-inline="true">OK</a>
+	</div>
+	
 	<script type="application/javascript">
-		$('#first').live("pagecreate", function(){
-			var elm = document.getElementById('entriesUL'), li;
-			console.dir(db);
+		$(document).ready(function(){
+			// Assign global variables
+			hiddenExpense = $('#totalExpensesHidden');
+			menuHidden = $('#menuHidden');
+			menuValue = $('#menu');
+			contentMainVar = $('#contentMain');
+			expenseTypeVar = $('#expenseType');
+			expenseAmountVar = $('#expenseAmount');
+			expenseDateVar = $('#expenseDate');
+			contentDialogVar = $('#contentDialog');
+			contentMessageVar = $('#contentMessage');
+			contentOKVar = $('#contentOK');
+			confirmationOKVar = $('#confirmationOK');
+			hideContentDialog();
+			document.getElementById('expenseDate').value = date_string;
 			
-			db.transaction(function(tx) {
-				tx.executeSql('SELECT * FROM listing', [], function(tx, results) {
-					for( i = 0; i < results.rows.length; i++) {
-						li = document.createElement('li');
-						li.innerHTML = '<br><b>Budget:</b> ' + formatCurrency(results.rows.item(i).selectedBudget) + '<br><b>Total Expenses:</b> ' + results.rows.item(i).totalExpenses + '<br><b>Remaining:</b>' + formatCurrency(results.rows.item(i).remaining) + '<br><b>Date Computed:</b>' + results.rows.item(i).entryDate + '<br>' + '<a href="details.html?id='+results.rows.item(i).id+'" data-ajax="false" data-role="button">View Expenses<a/><br>'+'<a href="add_new.html?id='+results.rows.item(i).id+'" data-ajax="false">Add Expense</a><br/>';
-				
-                        
-						var calculate = results.rows.item(i).selectedBudget;
-						var percent = 0.2;
-						var check = calculate * percent;
-						var remaining = results.rows.item(i).remaining;
-						var a = true;
+			
+			
+			db.transaction(function(tx){
+				tx.executeSql('SELECT * FROM listing ORDER BY entryDate DESC LIMIT 1', [], function(tx, results){
+						for( i = 0; i < results.rows.length; i++) {
 						
-						
-						if(remaining == 0.00)
-						{
-							$('#gotoBudget').html('Add Budget');				
+							  var options = '<option value="'+results.rows.item(i).id+'">'+results.rows.item(i).remaining+'</option>';
+							  $('#menu').append(options).attr('selected', true).removeAttr('selected');
+							  $("#menu").trigger("change");
+							  var value = results.rows.item(i).remaining;
+							  var totalExpenses = results.rows.item(i).totalExpenses;
+							  $('#menuHidden').val(value);
+							  $('#totalExpensesHidden').val(totalExpenses);
+							  
+							 var calculate = results.rows.item(i).selectedBudget;
+	 	                     var percent = 0.2; 
+							 var check = calculate * percent;
+							 var remaining = results.rows.item(i).remaining;
+								
 						}
-                
-						var expenseDate = results.rows.item(i).entryDate;
-						
-						if(elm.firstChild) {
-							elm.insertBefore(li, elm.firstChild);
-						} else {
-							elm.appendChild(li);
-						}
-						
-						$('#entriesUL li').live("click", function(){
-							
-						});
+					});	
+			});
+			
 
-					}
+			
+			
+		});
+	
+		$('#contentOK').click(function(){
+			hideContentDialog();
+			showMain();
+			return false;
+		});
+	
+		$('#contentOK').tap(function(){
+			hideContentDialog();
+			showMain();
+			return false;
+		});
+	
+		$('#submitExpense').click(function(){
+			
+			if(expenseAmountVar.val() > menuHidden.val())
+			{
+				alert('You cannot have much amount greater than your budget');	
+			}
+			else
+			{
+				$('#expenseForm').submit();	
+				document.location = 'listing.html';
+			}
+			return false;
+		});
+	
+		$('#submitExpense').tap(function(){
+			
+			if(expenseAmountVar.val() > menuHidden.val())
+			{
+				alert('You cannot have much amount greater than your budget');		
+			}
+			else
+			{
+				$('#expenseForm').submit();	
+				document.location = 'listing.html';
+			}
+			return false;
+		});
+	
+		$('#expenseForm').submit(function(){
+			var err = false;
+			var errMessage = null;
+	
+			// Hide the Main content
+			hideMain();
+	
+			// Show content dialog
+			showContentDialog();
+	
+			// Verify form is not empty
+			// Not intended to be comprehensive validation
+			// Keeping it simple for demo
+			
+			
+			
+			if(
+				expenseTypeVar.val() == EMPTY || expenseAmountVar.val() == EMPTY || expenseDateVar.val() == EMPTY 
+				||
+				expenseTypeVar.val() == null || expenseAmountVar.val() == null || expenseDateVar.val() == null
+			){
+				
+				
+				
+				err = true;
+				errMessage = 'Please fill out the form.';
+				
+				
+				
+				
+			}
+			
+			
+	
+			
+			
+			// If validation fails, show Dialog content
+			if (err == true) {
+				contentDialogAsError(errMessage);
+				return false;
+			}
+	
+			// If validation passes, show Transition content
+			contentDialogAsTransition('Processing your request. Please wait.');
+	
+			// Save form to local Web SQL Database; Database initilized in jquery-custom-scripting.js
+			// Proper implementation would use feature detection with Modernizr or send data to server via ajax
+			// Keeping it simple for demo
+			db.transaction(function(tx) {
+				//overall = expenseHidden.val() + expenseAmountVar.val() ;
+				var param = $.urlParam("id");
+				
+			    result = menuHidden.val() - expenseAmountVar.val();
+				var Addition = Number(hiddenExpense.val()) + Number(expenseAmountVar.val());
+				alert(Addition);
+				tx.executeSql("UPDATE listing SET remaining=?, totalExpenses=? WHERE id=?", [result, Addition, param]);
+				
+				tx.executeSql('INSERT INTO expenseTransfer (budgetID, expenseType, expenseAmount, expenseDate) values (?, ?, ?, ?)', [menuValue.val(),expenseTypeVar.val(), expenseAmountVar.val(), expenseDateVar.val()],
+				function(tx, results) {
+					// Display confirmation message
+					contentDialogAsConfirmation('Expense has been added.');
+					
+				},function(err) {
+					// Display error message
+					contentDialogAsError('Error processing SQL: ' + err.code);
 				});
+
+				
+				
+				
+				
 			});
 			
 			
-
+			
+			return false;
 		});
-		
-		function getparam()
+	
+	
+		function validate()
 		{
-			var param = $.urlParam('id');
-							alert(param);	
+					
+			if(expenseAmountVar.val() > menuValue.val())
+			{
+				alert('Expense amount is much bigger than your budget');
+			}
+		}	
+	
+	
+		function hideMain(){
+			contentMainVar.hide();
+		}
+		function showMain(){
+			contentMainVar.show();
+		}
+		function hideContentDialog(){
+			contentDialogVar.hide();
+		}
+		function showContentDialog(){
+			contentDialogVar.show();
+		}
+	
+		function contentDialogAsTransition(message){
+			contentMessageVar.text(message);
+			contentOKVar.hide();
+			confirmationOKVar.hide();
+		}
+		function contentDialogAsError(message){
+			contentMessageVar.text(message);
+			contentOKVar.show();
+			confirmationOKVar.hide();
+		}
+		function contentDialogAsConfirmation(message){
+			contentMessageVar.text(message);
+			contentOKVar.hide();
+			confirmationOKVar.show();
 		}
 		
-		/*$(document).ready(function(){
-			var elm = document.getElementById('entriesUL'), li;
-			console.dir(db);
-			
-			db.transaction(function(tx) {
-				tx.executeSql('SELECT * FROM budget ORDER BY budgetDate DESC', [], function(tx, results) {
-					for( i = 0; i < results.rows.length; i++) {
-						li = document.createElement('li');
-						li.innerHTML = '<br><b>Amount:</b><a href="#viewExpenses?id="'+results.rows.item(i).id+'"> ' + formatCurrency(results.rows.item(i).budgetAmount) + ' </a><br><b>Date:</b> ' + results.rows.item(i).budgetDate + '<br><br>';
-						var id = results.rows.item(i).id;
-						if(elm.firstChild) {
-							elm.insertBefore(li, elm.firstChild);
-						} else {
-							elm.appendChild(li);
-						}
-						
-					
-					}
-				tx.executeSql('SELECT * FROM expenseTransfer WHERE budgetID = ' + id +'', [], function(tx, results){
-					for(i = 0; i < results.rows.length; i++){
-						
-						var contents = "<b>Expense Amount: </b>"+ results.rows.item(i).expenseAmount + "<br>" + "<b>Expense Type: </b>" + results.rows.item(i).expenseType + "</br>";
-						$('#content').append(contents);
-						
-					}
-				});
-					
-					
-				});
-				
-				
-				
-			});
-			
-
-		});*/
-	
-
+		
+		function validate()
+		{
+			if(expenseAmount > menuValue){err = true; errMessage='Your Amount is greater than your budget!'; }	
+		}
+		
 		$.urlParam = function(name){
 			var results = new RegExp('[\\?&]' + name + '=([^&#]*)').exec(window.location.href);
 			return results[1] || 0;
 		}
-
-		/*$('#entriesUL li a').on("click", function() {  
-			
-			//$.mobile.changepage('#viewExpenses');
-				var param = $.urlParam("id");
-							alert(param);
-				
-		});*/ 
-		
-//
-//    $('#entriesUL li a').live("click", function() {  
-//			var dataurl = $(this).attr("id");  
-//			if (dataurl != null)  
-//
-//				$.mobile.changePage("#viewExpenses?id=" + dataurl);  
-//				
-//				var param = $.urlParam('id');
-//							alert(param);
-//							
-//							
-//					document.location = 'listing.html#viewExpenses';		
-//				
-//		});
-//
-//$('#view').on("click", function(){
-//		alert('view Clicked');
-//	});
-//		
-		function addMonths(date, months) {
-		  date.setMonth(date.getMonth() + months);
-		  return date;
-		}
-		
-		
-		//addMonths(new Date(), -6); // six months before now
-		// Thu Apr 30 2009 01:22:46 GMT-0600 
-		
-		//addMonths(new Date(), -12); // a year before now
-		// Thu Oct 30 2008 01:20:22 GMT-0600
-				
-		
-		$('#resetDB').click(function(){
-			resetListing();
-			return false;
-		});
-	
-		$('#resetDB').tap(function(){
-			resetListing();
-			return false;
-		});
 	</script>
 
 	<div id="footerDiv" data-role="footer" data-theme="b" data-id="footer" data-position="fixed">
 		<div data-role="navbar" data-type="horizontal" align="center">
-			<!--<ul>
+			<ul>
             <li><a href="budget_entries.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget List</a></li>
             	<li><a href="budget.html" data-icon="info" data-iconpos="top" data-ajax="false">Budget</a></li>
 				<li><a href="index.html" data-icon="check" data-iconpos="top" data-ajax="false">Expense</a></li>
 				<li><a href="entries.html" data-icon="grid" data-iconpos="top" data-ajax="false">Entries</a></li>
-			</ul>-->
+			</ul>
 		</div>
 	</div>
 
 </div>
-
-
-<div data-role="page" id="viewExpenses" data-add-back-btn="true">
-	<div data-role="header"><h3>Your Expenses</h3></div>
-    
-    
-     <div data-role="content" data-theme="c" id="contentMain" name="contentMain">
-		<h3> Entries</h3>
-		<ul id="entries"></ul><br>
-		<p><a href="" id="resetDB" data-role="button">Reset Database</a></p>
-	</div>
-    
-    <div data-role="content" id="content">
-    	<script>
-	
-            
-
-		var param = $.urlParam("id");
-							alert(param);
-		var elm = document.getElementById('entries'), li;
-			console.dir(db);
-        	db.transaction(function(tx) {
-				tx.executeSql('SELECT * FROM expenseTransfer WHERE budgetID = '+param+' ORDER BY expenseDate DESC', [], function(tx, results) {
-					for( i = 0; i < results.rows.length; i++) {
-						li = document.createElement('li');
-						li.innerHTML = '<b>ID:</b> ' + results.rows.item(i).budgetID +'<br/><b>Type:</b> ' + results.rows.item(i).expenseType + '<br><b>Amount:</b> ' + formatCurrency(results.rows.item(i).expenseAmount) + '<br><b>Date:</b> ' + results.rows.item(i).expenseDate + '<br><br>';
-						
-						var amount = results.rows.item(i).expenseAmount;
-						
-						var expenseType = results.rows.item(i).expenseType;
-						var expenseAmount = formatCurrency(results.rows.item(i).expenseAmount);
-						var expenseDate = results.rows.item(i).expenseDate;
-						
-						
-						
-						if(elm.firstChild) {
-							elm.insertBefore(li, elm.firstChild);
-							
-						} else {
-							elm.appendChild(li);
-						}	
-						
-					}
-					
-					
-					
-					
-				});
-				
-			});
-		
-			      
-        </script>
-    </div>
-    
-</div>
-
 
 </body>
 </html>
